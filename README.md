@@ -1,0 +1,1 @@
+# solucionesiamax-app
