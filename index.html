@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Soluciones IAmax</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
+
+<style>
+/* Reset global */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Onboarding solo visible cuando activo */
+#app-onboarding { display: none; }
+#app-barberia { display: none; }
+
+/* ===== ONBOARDING CSS ===== */
+
+  :root {
+    --gold: #E0AC4A;
+    --bg: #0A0A0A;
+    --surface: #141414;
+    --surface2: #1E1E1E;
+    --border: #2A2A2A;
+    --text: #F8F8F8;
+    --text-muted: #888;
+    --text-dim: #555;
+    --error: #E05A4A;
+    --success: #4AE0A0;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100dvh; display: flex; }
+
+  /* SIDEBAR */
+  .sidebar { width: 300px; min-height: 100dvh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 48px 28px; position: sticky; top: 0; flex-shrink: 0; }
+  .logo { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 48px; text-transform: uppercase; }
+  .steps-nav { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .step-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); }
+  .step-item.active { background: var(--surface2); }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; border: 1.5px solid var(--border); color: var(--text-muted); background: transparent; transition: all 0.2s; margin-top: 2px; }
+  .step-item.active .step-num { background: var(--gold); border-color: var(--gold); color: #000; }
+  .step-item.done .step-num { border-color: var(--gold); color: var(--gold); }
+  .step-label strong { font-size: 13px; font-weight: 500; color: var(--text-dim); display: block; }
+  .step-item.active .step-label strong, .step-item.done .step-label strong { color: var(--text); }
+  .step-label span { font-size: 11px; color: var(--text-dim); }
+  .sidebar-footer { font-size: 11px; color: var(--text-dim); line-height: 1.6; padding-top: 28px; border-top: 1px solid var(--border); }
+
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; min-height: 100dvh; }
+  .main-inner { flex: 1; max-width: 620px; width: 100%; margin: 0 auto; padding: 56px 36px 80px; }
+
+  .step-eyebrow { font-size: 11px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; }
+  .step-title { font-size: 26px; font-weight: 700; line-height: 1.25; margin-bottom: 8px; }
+  .step-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 36px; }
+
+  /* Forms */
+  .form-group { margin-bottom: 20px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 7px; letter-spacing: 0.03em; }
+  input[type="text"], input[type="email"], input[type="tel"], input[type="password"], textarea, select {
+    width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 11px 14px; outline: none; transition: border-color 0.15s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+  input.campo-error { border-color: var(--error) !important; }
+  input.campo-error:focus { border-color: var(--error); }
+  input::placeholder, textarea::placeholder { color: var(--text-dim); }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  select { appearance: none; cursor: pointer; }
+
+  /* Slug generado */
+  .slug-preview { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 14px; font-size: 14px; color: var(--gold); font-weight: 500; margin-top: 8px; }
+  .slug-label { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
+
+  /* Upload */
+  .upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 28px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+  .upload-zone:hover { border-color: var(--gold); background: rgba(224,172,74,0.03); }
+  .upload-zone.has-image { border-style: solid; border-color: var(--gold); }
+  .upload-preview { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; margin: 0 auto 10px; display: none; border: 2px solid var(--gold); }
+  .upload-zone.has-image .upload-preview { display: block; }
+  .upload-icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-zone.has-image .upload-icon { display: none; }
+  .upload-text { font-size: 13px; color: var(--text-muted); }
+  .upload-hint { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+
+  /* Bloqueos */
+  .bloqueo-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .bloqueo-info { flex: 1; }
+  .bloqueo-info strong { font-size: 13px; display: block; }
+  .bloqueo-info span { font-size: 11px; color: var(--text-muted); }
+  .bloqueo-tag { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; background: rgba(224,172,74,0.15); color: var(--gold); }
+
+  /* Upload pequeño para servicios */
+  .upload-zone-sm { padding: 16px; }
+  .upload-preview-sq { width: 60px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; margin: 0 auto 8px; display: none; border: 2px solid var(--gold); }
+  .upload-zone.has-image .upload-preview-sq { display: block; }
+
+  /* Days */
+  .days-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+  .day-btn { padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: transparent; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .day-btn.selected { border-color: var(--gold); color: var(--gold); background: rgba(224,172,74,0.07); }
+
+  /* Cards servicios */
+  .card-list { display: flex; flex-direction: column; gap: 10px; }
+  .card-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .card-info { flex: 1; }
+  .card-info strong { font-size: 13px; font-weight: 600; display: block; }
+  .card-info span { font-size: 11px; color: var(--text-muted); }
+  .card-remove { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 18px; padding: 4px 6px; transition: color 0.15s; line-height: 1; }
+  .card-remove:hover { color: var(--error); }
+
+  .add-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-top: 10px; display: none; }
+  .add-form.open { display: block; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: var(--gold); color: #000; }
+  .btn-primary:hover { background: #EDB94E; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+  .btn-ghost { background: transparent; color: var(--gold); border: 1.5px dashed var(--border); width: 100%; }
+  .btn-ghost:hover { border-color: var(--gold); background: rgba(224,172,74,0.05); }
+  .btn-danger { background: transparent; color: var(--error); border: 1.5px solid rgba(224,90,74,0.3); }
+  .btn-danger:hover { background: rgba(224,90,74,0.08); border-color: var(--error); }
+  .btn-sm { padding: 8px 16px; font-size: 12px; }
+
+  .nav-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--border); }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 20px; font-size: 13px; z-index: 999; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+  .toast.error { border-color: var(--error); color: var(--error); }
+  .toast.success { border-color: var(--success); color: var(--success); }
+
+  /* Success */
+  .success-screen { text-align: center; padding: 32px 0; }
+  .success-icon { width: 68px; height: 68px; border-radius: 50%; background: rgba(74,224,160,0.08); border: 2px solid var(--success); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 24px; }
+  .link-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 20px 0; }
+  .link-box span { font-size: 13px; color: var(--gold); font-weight: 500; word-break: break-all; }
+  .copy-btn { background: var(--surface2); border: none; border-radius: 6px; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; padding: 5px 10px; cursor: pointer; flex-shrink: 0; }
+  .copy-btn:hover { color: var(--text); }
+  .whatsapp-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: #fff; border-radius: var(--radius-sm); padding: 13px 24px; font-size: 14px; font-weight: 600; text-decoration: none; margin: 14px auto; max-width: 280px; transition: background 0.15s; }
+  .whatsapp-btn:hover { background: #20BA5A; }
+  .next-steps { text-align: left; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .next-step-item { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; margin-bottom: 10px; }
+  .delete-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; }
+  .delete-section p { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; }
+
+  /* Step views */
+  .step-view { display: none; }
+  .step-view.active { display: block; }
+
+  /* Mobile */
+  .mobile-progress { display: none; padding: 16px 20px 0; }
+  .progress-bar { height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 7px; }
+  .progress-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.3s; }
+  .progress-label { font-size: 11px; color: var(--text-muted); }
+
+  /* Loading */
+  .loading-overlay { position: fixed; inset: 0; background: rgba(10,10,10,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 14px; }
+  .loading-overlay.show { display: flex; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--text-muted); }
+
+  /* Modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: center; justify-content: center; }
+  .modal-bg.show { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; max-width: 380px; width: 90%; text-align: center; }
+  .modal h3 { font-size: 17px; margin-bottom: 10px; }
+  .modal p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+  .modal-actions { display: flex; gap: 10px; justify-content: center; }
+
+  /* Time row */
+  .time-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-top: 12px; }
+  .time-sep { font-size: 12px; color: var(--text-dim); text-align: center; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .mobile-progress { display: block; }
+    .main-inner { padding: 24px 18px 60px; }
+    .form-row { grid-template-columns: 1fr; }
+    .step-title { font-size: 22px; }
+  }
+
+</style>
+
+<style>
+/* ===== BARBERIA CSS (scoped) ===== */
+
+#app-barberia :root {
+    --gold: #E0AC4A;
+    --bg: #0A0A0A;
+    --surface: #141414;
+    --surface2: #1E1E1E;
+    --border: #2A2A2A;
+    --text: #F8F8F8;
+    --text-muted: #888;
+    --text-dim: #555;
+    --error: #E05A4A;
+    --success: #4AE0A0;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+#app-barberia *, #app-barberia *::before, #app-barberia *::after { box-sizing: border-box; margin: 0; padding: 0; }
+#app-barberia body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100dvh; }
+
+  /* LOADING */
+#app-barberia .page-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; gap: 16px; }
+#app-barberia .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* NOT FOUND */
+#app-barberia .not-found { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; gap: 12px; text-align: center; padding: 24px; }
+#app-barberia .not-found h1 { font-size: 22px; }
+#app-barberia .not-found p { font-size: 14px; color: var(--text-muted); }
+
+  /* HERO */
+#app-barberia .hero { position: relative; min-height: 380px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
+#app-barberia .hero-bg { position: absolute; inset: 0; background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); }
+#app-barberia .hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.4; }
+#app-barberia .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.3) 60%, transparent 100%); }
+#app-barberia .hero-content { position: relative; z-index: 2; padding: 32px 20px 28px; max-width: 640px; margin: 0 auto; width: 100%; }
+#app-barberia .hero-logo { width: 72px; height: 72px; border-radius: 50%; border: 3px solid var(--gold); object-fit: cover; margin-bottom: 16px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 28px; overflow: hidden; }
+#app-barberia .hero-logo img { width: 100%; height: 100%; object-fit: cover; }
+#app-barberia .hero-name { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+#app-barberia .hero-slogan { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+#app-barberia .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* MAIN CONTENT */
+#app-barberia .container { max-width: 640px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* SECTION */
+#app-barberia .section { margin-top: 36px; }
+#app-barberia .section-title { font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; }
+
+  /* BARBERO */
+#app-barberia .barber-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; align-items: center; gap: 16px; }
+#app-barberia .barber-avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover; flex-shrink: 0; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: var(--gold); overflow: hidden; }
+#app-barberia .barber-avatar img { width: 100%; height: 100%; object-fit: cover; }
+#app-barberia .barber-info strong { font-size: 15px; font-weight: 600; display: block; margin-bottom: 2px; }
+#app-barberia .barber-info span { font-size: 12px; color: var(--text-muted); }
+
+  /* SERVICIOS */
+#app-barberia .services-list { display: flex; flex-direction: column; gap: 12px; }
+#app-barberia .service-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; align-items: stretch; cursor: pointer; transition: border-color 0.15s; }
+#app-barberia .service-card:hover { border-color: var(--gold); }
+#app-barberia .service-card.selected { border-color: var(--gold); background: rgba(224,172,74,0.06); }
+#app-barberia .service-img { width: 90px; flex-shrink: 0; object-fit: cover; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+#app-barberia .service-img img { width: 100%; height: 100%; object-fit: cover; }
+#app-barberia .service-body { padding: 16px; flex: 1; }
+#app-barberia .service-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+#app-barberia .service-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 10px; }
+#app-barberia .service-price { font-size: 15px; font-weight: 700; color: var(--gold); margin-top: 8px; }
+#app-barberia .service-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin: auto 14px auto 0; transition: all 0.15s; }
+#app-barberia .service-card.selected .service-check { background: var(--gold); border-color: var(--gold); color: #000; font-size: 11px; font-weight: 700; }
+
+  /* BOTONES */
+#app-barberia .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; }
+#app-barberia .btn-primary { background: var(--gold); color: #000; }
+#app-barberia .btn-primary:hover { background: #EDB94E; }
+#app-barberia .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+#app-barberia .btn-secondary { background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); }
+#app-barberia .btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+#app-barberia .btn-maps { background: var(--surface); color: var(--text-muted); border: 1.5px solid var(--border); }
+#app-barberia .btn-maps:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* STICKY FOOTER */
+#app-barberia .sticky-cta { position: fixed; bottom: 0; left: 0; right: 0; padding: 14px 20px; background: rgba(10,10,10,0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border); z-index: 50; }
+#app-barberia .sticky-cta-inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#app-barberia .sticky-cta-info { font-size: 13px; color: var(--text-muted); }
+#app-barberia .sticky-cta-info strong { color: var(--text); display: block; font-size: 14px; }
+
+  /* MODAL RESERVA */
+#app-barberia .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; display: none; align-items: flex-end; justify-content: center; }
+#app-barberia .modal-bg.show { display: flex; }
+#app-barberia .modal { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; width: 100%; max-width: 640px; max-height: 90dvh; overflow-y: auto; padding: 24px 20px 40px; }
+#app-barberia .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+#app-barberia .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+#app-barberia .modal-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+  /* STEPS RESERVA */
+#app-barberia .reserva-steps { display: flex; gap: 6px; margin-bottom: 28px; }
+#app-barberia .reserva-step { flex: 1; height: 3px; border-radius: 2px; background: var(--border); transition: background 0.3s; }
+#app-barberia .reserva-step.active { background: var(--gold); }
+
+#app-barberia .reserva-view { display: none; }
+#app-barberia .reserva-view.active { display: block; }
+
+  /* Resumen servicio seleccionado */
+#app-barberia .resumen-box { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+#app-barberia .resumen-box span { font-size: 13px; color: var(--text-muted); }
+#app-barberia .resumen-box strong { font-size: 14px; color: var(--gold); }
+
+  /* Calendario */
+#app-barberia .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+#app-barberia .cal-header h3 { font-size: 15px; font-weight: 600; }
+#app-barberia .cal-nav { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 4px 8px; }
+#app-barberia .cal-nav:hover { color: var(--text); }
+#app-barberia .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+#app-barberia .cal-day-name { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-dim); padding: 4px 0; }
+#app-barberia .cal-day { text-align: center; padding: 8px 4px; border-radius: 6px; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
+#app-barberia .cal-day:hover:not(.disabled):not(.empty) { border-color: var(--gold); color: var(--gold); }
+#app-barberia .cal-day.selected { background: var(--gold); color: #000; font-weight: 700; }
+#app-barberia .cal-day.disabled { color: var(--text-dim); cursor: not-allowed; }
+#app-barberia .cal-day.empty { cursor: default; }
+#app-barberia .cal-day.today { border-color: var(--border); }
+
+  /* Slots horarios */
+#app-barberia .slots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+#app-barberia .slot { text-align: center; padding: 10px 4px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; border: 1.5px solid var(--border); cursor: pointer; transition: all 0.15s; }
+#app-barberia .slot:hover:not(.taken) { border-color: var(--gold); color: var(--gold); }
+#app-barberia .slot.selected { background: var(--gold); color: #000; border-color: var(--gold); font-weight: 700; }
+#app-barberia .slot.taken { color: var(--text-dim); cursor: not-allowed; text-decoration: line-through; }
+
+  /* Form datos cliente */
+#app-barberia .form-group { margin-bottom: 18px; }
+#app-barberia label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 7px; }
+#app-barberia input[type="text"], #app-barberia input[type="tel"], #app-barberia input[type="email"] {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 11px 14px; outline: none; transition: border-color 0.15s;
+  }
+#app-barberia input:focus { border-color: var(--gold); }
+#app-barberia input::placeholder { color: var(--text-dim); }
+
+  /* Confirmación */
+#app-barberia .confirm-box { background: var(--surface2); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+#app-barberia .confirm-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+#app-barberia .confirm-row:last-child { border-bottom: none; }
+#app-barberia .confirm-row span { color: var(--text-muted); }
+#app-barberia .confirm-row strong { color: var(--text); text-align: right; }
+
+  /* Success */
+#app-barberia .success-screen { text-align: center; padding: 20px 0; }
+#app-barberia .success-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(74,224,160,0.08); border: 2px solid var(--success); display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 20px; }
+#app-barberia .whatsapp-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: #fff; border-radius: var(--radius-sm); padding: 13px 24px; font-size: 14px; font-weight: 600; text-decoration: none; margin: 16px auto 0; transition: background 0.15s; }
+#app-barberia .whatsapp-btn:hover { background: #20BA5A; }
+
+  /* Toast */
+#app-barberia .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; font-size: 13px; z-index: 999; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
+#app-barberia .toast.show { opacity: 1; }
+#app-barberia .toast.error { border-color: var(--error); color: var(--error); }
+#app-barberia .toast.success { border-color: var(--success); color: var(--success); }
+
+  @media (max-width: 480px) {
+#app-barberia .slots-grid { grid-template-columns: repeat(3, 1fr); }
+#app-barberia .hero-name { font-size: 24px; }
+  }
+
+</style>
+</head>
+<body>
+
+<div id="app-onboarding">
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Creando tu barbería...</div>
+</div>
+
+<div class="modal-bg" id="deleteModal">
+  <div class="modal">
+    <h3>¿Eliminar esta barbería?</h3>
+    <p>Se borrarán todos los datos: servicios, horarios y citas. Esta acción no se puede deshacer.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-sm" onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmDelete()">Sí, eliminar todo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Soluciones IAmax</div>
+  <nav class="steps-nav" id="stepsNav">
+    <div class="step-item active" data-step="1"><div class="step-num">1</div><div class="step-label"><strong>Tu cuenta</strong><span>Acceso y perfil</span></div></div>
+    <div class="step-item" data-step="2"><div class="step-num">2</div><div class="step-label"><strong>Tu barbería</strong><span>Nombre e imagen</span></div></div>
+    <div class="step-item" data-step="3"><div class="step-num">3</div><div class="step-label"><strong>Servicios</strong><span>Lo que ofreces</span></div></div>
+    <div class="step-item" data-step="4"><div class="step-num">4</div><div class="step-label"><strong>Horarios</strong><span>Días y horas</span></div></div>
+    <div class="step-item" data-step="5"><div class="step-num">✓</div><div class="step-label"><strong>Listo</strong><span>Tu link y WhatsApp</span></div></div>
+  </nav>
+  <div class="sidebar-footer">Tus datos se guardan de forma segura.<br>Puedes editar todo desde tu panel.</div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="mobile-progress">
+    <div class="progress-label" id="mobileLabel">Paso 1 de 4</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+  <div class="main-inner">
+
+    <!-- PASO 1: Cuenta -->
+    <div class="step-view active" id="step1">
+      <div class="step-eyebrow">Paso 1 de 4</div>
+      <h1 class="step-title">Crea tu cuenta</h1>
+      <p class="step-desc">En menos de 5 minutos tu barbería estará lista para recibir reservas.</p>
+      <div class="form-group">
+        <label>Tu foto de perfil</label>
+        <div class="upload-zone" id="barberPhotoZone" onclick="document.getElementById('barberPhotoInput').click()">
+          <input type="file" id="barberPhotoInput" accept="image/*" onchange="previewBarberPhoto(this)" style="display:none">
+          <img class="upload-preview" id="barberPhotoPreview" src="" alt="Foto">
+          <div class="upload-icon">🧑‍💈</div>
+          <div class="upload-text">Toca para subir tu foto</div>
+          <div class="upload-hint">JPG, PNG o WEBP · Máximo 5MB · Mínimo 100×100px</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Nombre <span style="color:var(--error)">*</span></label><input type="text" id="firstName" placeholder="Luis"></div>
+        <div class="form-group"><label>Apellido</label><input type="text" id="lastName" placeholder="Rondón"></div>
+      </div>
+      <div class="form-group">
+        <label>Correo electrónico <span style="color:var(--error)">*</span></label>
+        <input type="email" id="email" placeholder="tu@correo.com">
+        <div style="font-size:11px;color:var(--text-dim);margin-top:6px">
+          📧 Usaremos este correo para recuperar tu cuenta si olvidas tu contraseña. Asegúrate de que sea uno que uses.
+        </div>
+      </div>
+      <div class="form-group">
+        <label>WhatsApp <span style="color:var(--error)">*</span></label>
+        <input type="tel" id="phone" placeholder="573001234567">
+        <div style="font-size:11px;color:var(--text-dim);margin-top:6px">
+          📲 Aquí recibirás las notificaciones de cada cita reservada.
+        </div>
+      </div>
+      <div class="form-group"><label>Contraseña <span style="color:var(--error)">*</span></label><input type="password" id="password" placeholder="Mínimo 8 caracteres"></div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:20px">
+        <span style="color:var(--error)">*</span> Campos obligatorios
+      </div>
+      <div class="nav-actions">
+        <span></span>
+        <button class="btn btn-primary" onclick="validarPaso1()">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASO 2: Barbería -->
+    <div class="step-view" id="step2">
+      <div class="step-eyebrow">Paso 2 de 4</div>
+      <h1 class="step-title">Tu barbería</h1>
+      <p class="step-desc">Esta info aparece en tu página pública donde los clientes reservan.</p>
+      <div class="form-group">
+        <label>Logo o imagen del negocio</label>
+        <div class="upload-zone" id="logoZone" onclick="document.getElementById('logoInput').click()">
+          <input type="file" id="logoInput" accept="image/*" onchange="previewLogo(this)" style="display:none">
+          <img class="upload-preview" id="logoPreview" src="" alt="Logo">
+          <div class="upload-icon">📸</div>
+          <div class="upload-text">Toca para subir tu logo o foto</div>
+          <div class="upload-hint">JPG, PNG o WEBP · Máximo 5MB · Mínimo 100×100px</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nombre de la barbería</label>
+        <input type="text" id="bizName" placeholder="Ej: The Favorite Barber" oninput="autoSlug()">
+      </div>
+      <div class="form-group">
+        <label>Tu link se generará así:</label>
+        <div class="slug-preview" id="slugPreview">iamax.app/tu-barberia</div>
+        <div class="slug-label">Se crea automáticamente desde el nombre. Lo puedes compartir con tus clientes.</div>
+      </div>
+      <div class="form-group"><label>Eslogan corto</label><input type="text" id="bizSlogan" placeholder="Ej: Cortes de precisión, estilo premium"></div>
+      <div class="form-group"><label>Descripción (opcional)</label><textarea id="bizDesc" placeholder="Cuéntale a tus clientes qué hace especial a tu barbería..."></textarea></div>
+      <div class="form-group">
+        <label>Ubicación — Link de Google Maps</label>
+        <input type="text" id="bizCity" placeholder="Pega aquí el link de Google Maps">
+        <div style="font-size:11px;color:var(--text-dim);margin-top:6px;line-height:1.6">
+          📍 En Google Maps → toca <strong style="color:var(--text-muted)">Compartir</strong> → <strong style="color:var(--text-muted)">Copiar enlace</strong> → pégalo aquí.<br>
+          Tus clientes podrán abrir la ruta directo desde tu página.
+        </div>
+      </div>
+      <div class="nav-actions">
+        <button class="btn btn-secondary btn-sm" onclick="goTo(1)">← Atrás</button>
+        <button class="btn btn-primary" onclick="validarPaso2()">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASO 3: Servicios -->
+    <div class="step-view" id="step3">
+      <div class="step-eyebrow">Paso 3 de 4</div>
+      <h1 class="step-title">Servicios</h1>
+      <p class="step-desc">Define qué ofreces, cuánto tiempo toma y cuánto cuesta.</p>
+      <div class="card-list" id="serviceList"></div>
+      <div class="add-form" id="addServiceForm">
+        <div class="form-group"><label>Nombre del servicio</label><input type="text" id="newSvcName" placeholder="Ej: Corte clásico"></div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0"><label>Duración</label>
+            <select id="newSvcDuration">
+              <option value="30">30 min</option>
+              <option value="45" selected>45 min</option>
+              <option value="60">60 min</option>
+              <option value="75">75 min</option>
+              <option value="90">90 min</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0"><label>Precio (COP)</label><input type="text" id="newSvcPrice" placeholder="Ej: 30000"></div>
+        </div>
+        <div class="form-group" style="margin-top:14px;margin-bottom:0">
+          <label>Foto del servicio (opcional)</label>
+          <div class="upload-zone upload-zone-sm" id="svcPhotoZone" onclick="document.getElementById('svcPhotoInput').click()">
+            <input type="file" id="svcPhotoInput" accept="image/*" onchange="previewSvcPhoto(this)" style="display:none">
+            <img class="upload-preview upload-preview-sq" id="svcPhotoPreview" src="" alt="Foto servicio">
+            <div class="upload-icon" style="font-size:20px">✂️</div>
+            <div class="upload-text" style="font-size:12px">Foto del corte o resultado</div>
+            <div class="upload-hint">JPG, PNG · Máximo 5MB</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn btn-primary btn-sm" onclick="addService()">Agregar</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleForm('addServiceForm',false)">Cancelar</button>
+        </div>
+      </div>
+      <button class="btn btn-ghost" style="margin-top:12px" onclick="toggleForm('addServiceForm',true)">+ Agregar servicio</button>
+      <div class="nav-actions">
+        <button class="btn btn-secondary btn-sm" onclick="goTo(2)">← Atrás</button>
+        <button class="btn btn-primary" onclick="validarPaso3()">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASO 4: Horarios -->
+    <div class="step-view" id="step4">
+      <div class="step-eyebrow">Paso 4 de 4</div>
+      <h1 class="step-title">Horarios</h1>
+      <p class="step-desc">Configura tus días, horario de atención y bloqueos.</p>
+
+      <!-- Días -->
+      <div class="form-group">
+        <label>Días de atención</label>
+        <div class="days-grid" id="daysGrid">
+          <button class="day-btn selected" data-day="1">Lunes</button>
+          <button class="day-btn selected" data-day="2">Martes</button>
+          <button class="day-btn" data-day="3">Miércoles</button>
+          <button class="day-btn selected" data-day="4">Jueves</button>
+          <button class="day-btn selected" data-day="5">Viernes</button>
+          <button class="day-btn selected" data-day="6">Sábado</button>
+          <button class="day-btn" data-day="0">Domingo</button>
+        </div>
+      </div>
+
+      <!-- Horario general -->
+      <div class="form-group">
+        <label>Horario de atención</label>
+        <div class="time-row">
+          <input type="text" id="openTime" value="09:00" placeholder="09:00">
+          <div class="time-sep">hasta</div>
+          <input type="text" id="closeTime" value="22:00" placeholder="22:00">
+        </div>
+      </div>
+
+      <!-- Tiempo de alimentación -->
+      <div class="form-group">
+        <label>⏰ Tiempo de alimentación</label>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px">Este horario se bloquea todos los días automáticamente.</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <input type="checkbox" id="alimentacionCheck" onchange="toggleAlimentacion()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer">
+          <label for="alimentacionCheck" style="margin:0;cursor:pointer;font-size:13px;color:var(--text-muted)">Activar bloqueo de alimentación</label>
+        </div>
+        <div id="alimentacionHorario" style="display:none">
+          <div class="time-row">
+            <input type="text" id="alimentacionInicio" value="12:00" placeholder="12:00">
+            <div class="time-sep">hasta</div>
+            <input type="text" id="alimentacionFin" value="13:00" placeholder="13:00">
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloqueos especiales -->
+      <div class="form-group">
+        <label>🔒 Bloqueos especiales</label>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:12px">Bloquea un día completo, medio día o un rango de horas para vueltas personales.</div>
+
+        <!-- Lista de bloqueos agregados -->
+        <div id="bloqueosList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+
+        <!-- Botones rápidos -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+          <button class="btn btn-secondary btn-sm" onclick="bloqueoRapido('dia')">📅 Bloquear día completo</button>
+          <button class="btn btn-secondary btn-sm" onclick="bloqueoRapido('manana')">🌅 Bloquear mañana</button>
+          <button class="btn btn-secondary btn-sm" onclick="bloqueoRapido('tarde')">🌆 Bloquear tarde</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleForm('addBloqueoForm', true)">⏱ Bloquear horas específicas</button>
+        </div>
+
+        <!-- Formulario bloqueo personalizado -->
+        <div class="add-form" id="addBloqueoForm">
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:0">
+              <label>Fecha</label>
+              <input type="date" id="bloqueoFecha">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>Motivo (opcional)</label>
+              <input type="text" id="bloqueoMotivo" placeholder="Ej: Cita médica">
+            </div>
+          </div>
+          <div class="time-row" style="margin-top:14px">
+            <input type="text" id="bloqueoInicio" placeholder="10:00">
+            <div class="time-sep">hasta</div>
+            <input type="text" id="bloqueoFin" placeholder="12:00">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px">
+            <input type="checkbox" id="bloqueoRecurrente" style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer">
+            <label for="bloqueoRecurrente" style="margin:0;font-size:12px;color:var(--text-muted);cursor:pointer">Repetir cada semana (bloqueo recurrente)</label>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button class="btn btn-primary btn-sm" onclick="agregarBloqueo()">Agregar bloqueo</button>
+            <button class="btn btn-secondary btn-sm" onclick="toggleForm('addBloqueoForm',false)">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn btn-secondary btn-sm" onclick="goTo(3)">← Atrás</button>
+        <button class="btn btn-primary" id="createBtn" onclick="createBarberia()">Crear mi barbería →</button>
+      </div>
+    </div>
+
+    <!-- PASO 5: Éxito -->
+    <div class="step-view" id="step5">
+      <div class="success-screen">
+        <div class="success-icon">✓</div>
+        <h1 class="step-title" style="margin-bottom:8px">¡Tu barbería está lista!</h1>
+        <p class="step-desc" id="successDesc" style="margin-bottom:0">Ya puedes recibir reservas online.</p>
+        <div class="link-box">
+          <span id="finalLink"></span>
+          <button class="copy-btn" onclick="copyLink()">Copiar</button>
+        </div>
+        <a id="whatsappBtn" href="#" target="_blank" class="whatsapp-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Conectar mi WhatsApp
+        </a>
+        <p style="font-size:12px;color:var(--text-dim);margin-top:6px">Al abrir WhatsApp, envía el mensaje que aparece para activar las confirmaciones automáticas de citas.</p>
+        <div class="next-steps">
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">¿Qué sigue?</p>
+          <div class="next-step-item"><span style="color:var(--gold)">→</span><span>Comparte tu link con clientes por WhatsApp o Instagram</span></div>
+          <div class="next-step-item"><span style="color:var(--gold)">→</span><span>Entra a tu panel para configurar excepciones de horario</span></div>
+          <div class="next-step-item"><span style="color:var(--gold)">→</span><span>Conecta Google Calendar para recordatorios automáticos</span></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:24px;width:100%;justify-content:center">Ir a mi panel →</button>
+        <div class="delete-section">
+          <p>¿Esta fue una prueba? Puedes eliminar esta barbería y todos sus datos.</p>
+          <button class="btn btn-danger btn-sm" onclick="openDeleteModal()">🗑 Eliminar esta barbería</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<div id="app-barberia">
+<!-- LOADING -->
+<div id="pageLoading" class="page-loading">
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--text-muted)">Cargando barbería...</div>
+</div>
+
+<!-- NOT FOUND -->
+<div id="notFound" class="not-found" style="display:none">
+  <div style="font-size:48px">✂️</div>
+  <h1>Barbería no encontrada</h1>
+  <p>El link que seguiste no existe o fue eliminado.</p>
+</div>
+
+<!-- PÁGINA PRINCIPAL -->
+<div id="mainPage" style="display:none">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <img id="heroBgImg" src="" alt="" class="hero-img" style="display:none">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-logo" id="heroLogo">✂️</div>
+      <h1 class="hero-name" id="heroName">Cargando...</h1>
+      <p class="hero-slogan" id="heroSlogan"></p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="abrirReserva()">Reservar cita</button>
+        <a id="mapsBtn" href="#" target="_blank" class="btn btn-maps" style="display:none">📍 Cómo llegar</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- BARBERO -->
+    <div class="section">
+      <div class="section-title">Tu barbero</div>
+      <div class="barber-card">
+        <div class="barber-avatar" id="barberAvatar">💈</div>
+        <div class="barber-info">
+          <strong id="barberName">-</strong>
+          <span id="barberContact">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESCRIPCIÓN -->
+    <div class="section" id="descSection" style="display:none">
+      <div class="section-title">Sobre nosotros</div>
+      <p id="bizDesc" style="font-size:14px;color:var(--text-muted);line-height:1.7"></p>
+    </div>
+
+    <!-- SERVICIOS -->
+    <div class="section">
+      <div class="section-title">Servicios</div>
+      <div class="services-list" id="servicesList"></div>
+    </div>
+
+    <div style="height: 100px"></div>
+  </div>
+
+  <!-- STICKY CTA -->
+  <div class="sticky-cta">
+    <div class="sticky-cta-inner">
+      <div class="sticky-cta-info">
+        <strong id="ctaServicio">Elige un servicio</strong>
+        <span id="ctaPrecio">y reserva tu cita</span>
+      </div>
+      <button class="btn btn-primary" onclick="abrirReserva()" id="ctaBtn">Reservar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESERVA -->
+<div class="modal-bg" id="modalReserva">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="reserva-steps" id="reservaSteps">
+      <div class="reserva-step active"></div>
+      <div class="reserva-step"></div>
+      <div class="reserva-step"></div>
+      <div class="reserva-step"></div>
+    </div>
+
+    <!-- PASO R1: Elegir fecha -->
+    <div class="reserva-view active" id="r1">
+      <div class="modal-title">¿Qué día?</div>
+      <div class="modal-subtitle" id="r1Subtitle">Elige la fecha de tu cita</div>
+      <div class="resumen-box" id="resumenServicio" style="display:none">
+        <span>Servicio</span>
+        <strong id="resumenNombre">-</strong>
+      </div>
+      <div class="cal-header">
+        <button class="cal-nav" onclick="cambiarMes(-1)">‹</button>
+        <h3 id="calTitle"></h3>
+        <button class="cal-nav" onclick="cambiarMes(1)">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="nav-actions" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between">
+        <button class="btn btn-secondary btn-sm" onclick="cerrarReserva()">Cancelar</button>
+        <button class="btn btn-primary" onclick="irR(2)" id="btnR1">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASO R2: Elegir hora -->
+    <div class="reserva-view" id="r2">
+      <div class="modal-title">¿A qué hora?</div>
+      <div class="modal-subtitle" id="r2Subtitle">Elige el horario disponible</div>
+      <div class="slots-grid" id="slotsGrid"></div>
+      <div class="nav-actions" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between">
+        <button class="btn btn-secondary btn-sm" onclick="irR(1)">← Atrás</button>
+        <button class="btn btn-primary" onclick="irR(3)" id="btnR2">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASO R3: Datos cliente -->
+    <div class="reserva-view" id="r3">
+      <div class="modal-title">Tus datos</div>
+      <div class="modal-subtitle">Para confirmar tu cita</div>
+      <div class="form-group"><label>Nombre completo *</label><input type="text" id="clientName" placeholder="Tu nombre"></div>
+      <div class="form-group"><label>WhatsApp *</label><input type="tel" id="clientPhone" placeholder="573001234567"></div>
+      <div class="form-group"><label>Correo (opcional)</label><input type="email" id="clientEmail" placeholder="tu@correo.com"></div>
+      <div class="nav-actions" style="margin-top:8px;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between">
+        <button class="btn btn-secondary btn-sm" onclick="irR(2)">← Atrás</button>
+        <button class="btn btn-primary" onclick="irR(4)">Confirmar →</button>
+      </div>
+    </div>
+
+    <!-- PASO R4: Confirmación -->
+    <div class="reserva-view" id="r4">
+      <div class="modal-title">Confirma tu cita</div>
+      <div class="modal-subtitle">Revisa los detalles antes de reservar</div>
+      <div class="confirm-box" id="confirmBox"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" id="btnConfirmar" onclick="confirmarCita()">Reservar cita</button>
+      <button class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:8px" onclick="irR(3)">← Editar datos</button>
+    </div>
+
+    <!-- PASO R5: Éxito -->
+    <div class="reserva-view" id="r5">
+      <div class="success-screen">
+        <div class="success-icon">✓</div>
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">¡Cita reservada!</h2>
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:0;line-height:1.6" id="successMsg"></p>
+        <a id="waConfirm" href="#" target="_blank" class="whatsapp-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Enviar confirmación por WhatsApp
+        </a>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:10px" onclick="cerrarReserva()">Cerrar</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ===== ROUTER =====
+(function() {
+  var path = window.location.pathname;
+  var slug = path.replace(/^\//, '').split('/')[0];
+  var isRegistro = !slug || slug === '' || slug === 'registro' || slug === 'index.html';
+  
+  if (isRegistro) {
+    document.getElementById('app-onboarding').style.display = 'block';
+    document.title = 'Crea tu barbería — Soluciones IAmax';
+  } else {
+    document.getElementById('app-barberia').style.display = 'block';
+  }
+  
+  window.__APP_SLUG = slug;
+  window.__IS_REGISTRO = isRegistro;
+})();
+
+// ===== ONBOARDING JS =====
+(function() {
+  if (!window.__IS_REGISTRO) return;
+  const SUPABASE_URL = 'https://wfgktdfvizioozzjubtm.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmZ2t0ZGZ2aXppb296emp1YnRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5MTI2MDEsImV4cCI6MjEwOTQ4ODYwMX0.4d5pFIJIRNm8R-NXTgwxRJ2ARLFJv76yOBOmV-CD6ok';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentStep = 1;
+  const totalSteps = 4;
+  const services = [];
+  const selectedDays = new Set([1,2,4,5,6]);
+  let createdBusinessId = null;
+  let logoBase64 = null;
+  let generatedSlug = '';
+
+  const stepLabels = ['Tu cuenta','Tu barbería','Servicios','Horarios','Listo'];
+
+  // ── VALIDACIONES ──
+  function validarPaso1() {
+    const firstName = document.getElementById('firstName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    if (!firstName) { showToast('Escribe tu nombre', 'error'); document.getElementById('firstName').focus(); return; }
+    if (!email) { showToast('Escribe tu correo electrónico', 'error'); document.getElementById('email').focus(); return; }
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) { showToast('El correo no tiene un formato válido', 'error'); document.getElementById('email').focus(); return; }
+    if (!phone) { showToast('Escribe tu número de WhatsApp', 'error'); document.getElementById('phone').focus(); return; }
+    // Validar que el teléfono solo tenga números y mínimo 10 dígitos
+    const phoneClean = phone.replace(/\D/g,'');
+    if (phoneClean.length < 10) { showToast('El WhatsApp debe tener mínimo 10 dígitos', 'error'); document.getElementById('phone').focus(); return; }
+    if (!password) { showToast('Escribe una contraseña', 'error'); document.getElementById('password').focus(); return; }
+    if (password.length < 8) { showToast('La contraseña debe tener mínimo 8 caracteres', 'error'); document.getElementById('password').focus(); return; }
+    goTo(2);
+  }
+
+  function validarPaso2() {
+    const bizName = document.getElementById('bizName').value.trim();
+    if (!bizName) { showToast('Escribe el nombre de tu barbería', 'error'); document.getElementById('bizName').focus(); return; }
+    if (!generatedSlug) { autoSlug(); }
+    goTo(3);
+  }
+
+  function validarPaso3() {
+    if (services.length === 0) { showToast('Agrega al menos un servicio', 'error'); return; }
+    goTo(4);
+  }
+
+  function goTo(n) {
+    document.getElementById('step' + currentStep).classList.remove('active');
+    document.getElementById('step' + n).classList.add('active');
+    currentStep = n;
+    updateNav();
+    window.scrollTo(0,0);
+  }
+
+  function updateNav() {
+    document.querySelectorAll('.step-item').forEach(el => {
+      const s = parseInt(el.dataset.step);
+      el.classList.remove('active','done');
+      if (s === currentStep) el.classList.add('active');
+      else if (s < currentStep) el.classList.add('done');
+    });
+    const pct = ((currentStep-1)/totalSteps)*100;
+    document.getElementById('progressFill').style.width = pct + '%';
+    const idx = Math.min(currentStep-1, stepLabels.length-1);
+    document.getElementById('mobileLabel').textContent = 'Paso ' + Math.min(currentStep,totalSteps) + ' de ' + totalSteps + ' — ' + stepLabels[idx];
+  }
+
+  let barberPhotoBase64 = null;
+  let svcPhotoBase64 = null;
+
+  // Función reutilizable para procesar imagen
+  function procesarImagen(file, onSuccess, onError) {
+    const tiposValidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!tiposValidos.includes(file.type)) { onError('Solo se aceptan imágenes JPG, PNG o WEBP'); return; }
+    if (file.size > 5 * 1024 * 1024) { onError('La imagen no puede pesar más de 5MB'); return; }
+    const r = new FileReader();
+    r.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        if (img.width < 100 || img.height < 100) { onError('La imagen es muy pequeña, usa una de mejor calidad'); return; }
+        const MAX = 800;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) { const ratio = Math.min(MAX/w, MAX/h); w = Math.round(w*ratio); h = Math.round(h*ratio); }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        onSuccess(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = e.target.result;
+    };
+    r.readAsDataURL(file);
+  }
+
+  // Foto del barbero
+  function previewBarberPhoto(input) {
+    if (!input.files[0]) return;
+    procesarImagen(input.files[0],
+      (b64) => {
+        barberPhotoBase64 = b64;
+        document.getElementById('barberPhotoPreview').src = b64;
+        document.getElementById('barberPhotoZone').classList.add('has-image');
+        showToast('Foto cargada correctamente', 'success');
+      },
+      (err) => { showToast(err, 'error'); input.value = ''; }
+    );
+  }
+
+  // Foto del servicio
+  function previewSvcPhoto(input) {
+    if (!input.files[0]) return;
+    procesarImagen(input.files[0],
+      (b64) => {
+        svcPhotoBase64 = b64;
+        document.getElementById('svcPhotoPreview').src = b64;
+        document.getElementById('svcPhotoZone').classList.add('has-image');
+        showToast('Foto del servicio cargada', 'success');
+      },
+      (err) => { showToast(err, 'error'); input.value = ''; }
+    );
+  }
+
+  // Auto-genera slug desde el nombre
+  function autoSlug() {
+    const name = document.getElementById('bizName').value;
+    generatedSlug = name.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,'-')
+      .replace(/[^a-z0-9-]/g,'')
+      .replace(/-+/g,'-')
+      .replace(/^-|-$/g,'');
+    const preview = document.getElementById('slugPreview');
+    preview.textContent = generatedSlug ? 'demo-solucionesiamax.netlify.app/' + generatedSlug : 'demo-solucionesiamax.netlify.app/tu-barberia';
+  }
+
+  // Logo del negocio
+  function previewLogo(input) {
+    if (!input.files[0]) return;
+    procesarImagen(input.files[0],
+      (b64) => {
+        logoBase64 = b64;
+        document.getElementById('logoPreview').src = b64;
+        document.getElementById('logoZone').classList.add('has-image');
+        showToast('Imagen cargada correctamente', 'success');
+      },
+      (err) => { showToast(err, 'error'); input.value = ''; document.getElementById('logoZone').classList.remove('has-image'); }
+    );
+  }
+
+  // Days
+  document.getElementById('daysGrid').addEventListener('click', e => {
+    const btn = e.target.closest('.day-btn');
+    if (!btn) return;
+    const d = parseInt(btn.dataset.day);
+    if (selectedDays.has(d)) { selectedDays.delete(d); btn.classList.remove('selected'); }
+    else { selectedDays.add(d); btn.classList.add('selected'); }
+  });
+
+  function toggleForm(id, open) {
+    document.getElementById(id).classList.toggle('open', open);
+  }
+
+  // Servicios
+  function addService() {
+    const name = document.getElementById('newSvcName').value.trim();
+    const duration = parseInt(document.getElementById('newSvcDuration').value);
+    const price = document.getElementById('newSvcPrice').value.trim();
+    if (!name) { showToast('Escribe el nombre del servicio', 'error'); return; }
+    services.push({ name, duration, price, photo: svcPhotoBase64 });
+    renderServices();
+    toggleForm('addServiceForm', false);
+    // Limpiar formulario
+    document.getElementById('newSvcName').value = '';
+    document.getElementById('newSvcPrice').value = '';
+    document.getElementById('svcPhotoInput').value = '';
+    document.getElementById('svcPhotoPreview').src = '';
+    document.getElementById('svcPhotoZone').classList.remove('has-image');
+    svcPhotoBase64 = null;
+  }
+  function removeService(i) { services.splice(i,1); renderServices(); }
+  function renderServices() {
+    document.getElementById('serviceList').innerHTML = services.map((s,i) => `
+      <div class="card-item">
+        ${s.photo
+          ? `<img src="${s.photo}" style="width:44px;height:44px;border-radius:var(--radius-sm);object-fit:cover;flex-shrink:0;border:1px solid var(--border)">`
+          : `<div style="width:44px;height:44px;border-radius:var(--radius-sm);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">✂️</div>`
+        }
+        <div class="card-info">
+          <strong>${s.name}</strong>
+          <span>${s.duration} min${s.price ? ' · $' + Number(s.price).toLocaleString('es-CO') : ''}</span>
+        </div>
+        <button class="card-remove" onclick="removeService(${i})">×</button>
+      </div>`).join('');
+  }
+
+  // ── BLOQUEOS ──
+  const bloqueos = [];
+
+  function toggleAlimentacion() {
+    const check = document.getElementById('alimentacionCheck').checked;
+    document.getElementById('alimentacionHorario').style.display = check ? 'block' : 'none';
+  }
+
+  function bloqueoRapido(tipo) {
+    const hoy = new Date().toISOString().split('T')[0];
+    const openH = document.getElementById('openTime').value || '09:00';
+    const closeH = document.getElementById('closeTime').value || '22:00';
+
+    // Calcular mediodía
+    const openParts = openH.split(':').map(Number);
+    const closeParts = closeH.split(':').map(Number);
+    const totalMins = (closeParts[0]*60+closeParts[1]) - (openParts[0]*60+openParts[1]);
+    const midMins = openParts[0]*60 + openParts[1] + Math.floor(totalMins/2);
+    const midH = String(Math.floor(midMins/60)).padStart(2,'0') + ':' + String(midMins%60).padStart(2,'0');
+
+    let inicio, fin, label;
+    if (tipo === 'dia') { inicio = openH; fin = closeH; label = 'Día completo'; }
+    else if (tipo === 'manana') { inicio = openH; fin = midH; label = 'Mañana'; }
+    else if (tipo === 'tarde') { inicio = midH; fin = closeH; label = 'Tarde'; }
+
+    // Pedir fecha
+    const fecha = prompt('¿Para qué fecha? (YYYY-MM-DD)', hoy);
+    if (!fecha) return;
+
+    bloqueos.push({ fecha, inicio, fin, motivo: label, recurrente: false });
+    renderBloqueos();
+    showToast('Bloqueo agregado: ' + label, 'success');
+  }
+
+  function agregarBloqueo() {
+    const fecha = document.getElementById('bloqueoFecha').value;
+    const inicio = document.getElementById('bloqueoInicio').value.trim();
+    const fin = document.getElementById('bloqueoFin').value.trim();
+    const motivo = document.getElementById('bloqueoMotivo').value.trim();
+    const recurrente = document.getElementById('bloqueoRecurrente').checked;
+
+    if (!fecha) { showToast('Selecciona una fecha', 'error'); return; }
+    if (!inicio || !fin) { showToast('Escribe el horario de inicio y fin', 'error'); return; }
+
+    bloqueos.push({ fecha, inicio, fin, motivo: motivo || 'Bloqueo personal', recurrente });
+    renderBloqueos();
+    toggleForm('addBloqueoForm', false);
+    document.getElementById('bloqueoFecha').value = '';
+    document.getElementById('bloqueoInicio').value = '';
+    document.getElementById('bloqueoFin').value = '';
+    document.getElementById('bloqueoMotivo').value = '';
+    document.getElementById('bloqueoRecurrente').checked = false;
+    showToast('Bloqueo agregado', 'success');
+  }
+
+  function eliminarBloqueo(i) { bloqueos.splice(i,1); renderBloqueos(); }
+
+  function renderBloqueos() {
+    const list = document.getElementById('bloqueosList');
+    if (bloqueos.length === 0) { list.innerHTML = ''; return; }
+    list.innerHTML = bloqueos.map((b,i) => `
+      <div class="bloqueo-card">
+        <div class="bloqueo-info">
+          <strong>${b.motivo}</strong>
+          <span>${b.fecha} · ${b.inicio} – ${b.fin}</span>
+        </div>
+        ${b.recurrente ? '<span class="bloqueo-tag">Recurrente</span>' : ''}
+        <button class="card-remove" onclick="eliminarBloqueo(${i})">×</button>
+      </div>`).join('');
+  }
+
+  // Crear barbería
+  async function createBarberia() {
+    const bizName = document.getElementById('bizName').value.trim();
+    const firstName = document.getElementById('firstName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+
+    if (!firstName) { showToast('Falta tu nombre (paso 1)', 'error'); return; }
+    if (!bizName) { showToast('Falta el nombre de la barbería (paso 2)', 'error'); return; }
+    if (!generatedSlug) { showToast('Escribe el nombre de tu barbería para generar tu link', 'error'); return; }
+    if (!phone) { showToast('Falta tu WhatsApp (paso 1)', 'error'); return; }
+
+    showLoading('Creando tu barbería...');
+    try {
+      const lastName = document.getElementById('lastName').value.trim();
+      const { data: biz, error: bizErr } = await sb.from('businesses').insert({
+        owner_name: (firstName + ' ' + lastName).trim(),
+        owner_email: email || (generatedSlug + '@iamax.app'),
+        owner_phone: phone,
+        name: bizName,
+        slug: generatedSlug,
+        slogan: document.getElementById('bizSlogan').value.trim() || null,
+        description: document.getElementById('bizDesc').value.trim() || null,
+        maps_url: document.getElementById('bizCity').value.trim() || null,
+        logo_url: logoBase64,
+        whatsapp_number: phone
+      }).select().single();
+
+      if (bizErr) {
+        if (bizErr.code === '23505') { showToast('Ese nombre ya está en uso, prueba con otro', 'error'); hideLoading(); return; }
+        throw bizErr;
+      }
+      createdBusinessId = biz.id;
+
+      // Insertar el barbero dueño como staff con foto
+      updateLoadingText('Configurando tu perfil...');
+      const { data: staffRow } = await sb.from('staff').insert({
+        business_id: biz.id,
+        full_name: (firstName + ' ' + lastName).trim(),
+        email: email || null,
+        whatsapp_number: phone,
+        photo_url: barberPhotoBase64 || null
+      }).select().single();
+
+      if (staffRow) {
+        await sb.from('staff_access').insert({
+          staff_id: staffRow.id,
+          access_code: firstName.toLowerCase() + '2024'
+        });
+      }
+
+      // Servicios
+      if (services.length > 0) {
+        updateLoadingText('Guardando servicios...');
+        await sb.from('services').insert(
+          services.map((s,i) => ({ business_id: biz.id, name: s.name, duration_minutes: s.duration, price: s.price ? parseInt(s.price) : null, display_order: i, image_url: s.photo || null }))
+        );
+      }
+
+      // Horarios
+      updateLoadingText('Configurando horarios...');
+      const openTime = document.getElementById('openTime').value || '09:00';
+      const closeTime = document.getElementById('closeTime').value || '22:00';
+      await sb.from('business_hours').insert(
+        [0,1,2,3,4,5,6].map(d => ({
+          business_id: biz.id,
+          day_of_week: d,
+          open_time: openTime + ':00',
+          close_time: closeTime + ':00',
+          is_open: selectedDays.has(d),
+          slot_duration_minutes: 15
+        }))
+      );
+
+      // Alimentación
+      const alimentacionCheck = document.getElementById('alimentacionCheck').checked;
+      if (alimentacionCheck) {
+        updateLoadingText('Guardando bloqueo de alimentación...');
+        const aInicio = document.getElementById('alimentacionInicio').value || '12:00';
+        const aFin = document.getElementById('alimentacionFin').value || '13:00';
+        await sb.from('blocked_slots').insert({
+          business_id: biz.id,
+          staff_id: staffRow ? staffRow.id : null,
+          day_of_week: null,
+          start_time: aInicio + ':00',
+          end_time: aFin + ':00',
+          reason: 'Alimentación',
+          is_active: true
+        });
+      }
+
+      // Bloqueos especiales
+      if (bloqueos.length > 0) {
+        updateLoadingText('Guardando bloqueos especiales...');
+        await sb.from('special_dates').insert(
+          bloqueos.map(b => ({
+            business_id: biz.id,
+            staff_id: staffRow ? staffRow.id : null,
+            date: b.fecha,
+            is_open: false,
+            label: b.motivo + ' · ' + b.inicio + '–' + b.fin
+          }))
+        );
+      }
+
+      hideLoading();
+      const finalLink = 'demo-solucionesiamax.netlify.app/' + generatedSlug;
+      document.getElementById('finalLink').textContent = finalLink;
+      document.getElementById('successDesc').textContent = bizName + ' ya puede recibir reservas online.';
+      const msg = encodeURIComponent('¡Hola! Acabo de crear mi barbería "' + bizName + '" en https://' + finalLink + '. Quiero activar las confirmaciones automáticas de citas por WhatsApp.');
+      document.getElementById('whatsappBtn').href = 'https://wa.me/' + phone + '?text=' + msg;
+      goTo(5);
+      showToast('¡Barbería creada con éxito!', 'success');
+
+    } catch(err) {
+      hideLoading();
+      console.error(err);
+      showToast('Error al crear. Revisa la consola.', 'error');
+    }
+  }
+
+  // Eliminar
+  function openDeleteModal() { document.getElementById('deleteModal').classList.add('show'); }
+  function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('show'); }
+  async function confirmDelete() {
+    if (!createdBusinessId) { showToast('No hay barbería creada', 'error'); closeDeleteModal(); return; }
+    closeDeleteModal();
+    showLoading('Eliminando barbería...');
+    try {
+      const { error } = await sb.from('businesses').delete().eq('id', createdBusinessId);
+      if (error) throw error;
+      hideLoading();
+      createdBusinessId = null;
+      showToast('Barbería eliminada correctamente', 'success');
+      setTimeout(() => location.reload(), 1500);
+    } catch(err) {
+      hideLoading();
+      showToast('Error al eliminar. Revisa la consola.', 'error');
+    }
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText('https://' + document.getElementById('finalLink').textContent).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = '¡Copiado!';
+      setTimeout(() => btn.textContent = 'Copiar', 2000);
+    });
+  }
+
+  function showLoading(text) {
+    document.getElementById('loadingText').textContent = text;
+    document.getElementById('loadingOverlay').classList.add('show');
+    document.getElementById('createBtn').disabled = true;
+  }
+  function updateLoadingText(text) { document.getElementById('loadingText').textContent = text; }
+  function hideLoading() {
+    document.getElementById('loadingOverlay').classList.remove('show');
+    document.getElementById('createBtn').disabled = false;
+  }
+  function showToast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+})();
+
+// ===== BARBERIA JS =====
+(function() {
+  if (window.__IS_REGISTRO) return;
+  const SUPABASE_URL = 'https://wfgktdfvizioozzjubtm.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmZ2t0ZGZ2aXppb296emp1YnRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5MTI2MDEsImV4cCI6MjEwOTQ4ODYwMX0.4d5pFIJIRNm8R-NXTgwxRJ2ARLFJv76yOBOmV-CD6ok';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let bizData = null, staffData = null, serviciosData = [], horariosData = [];
+  let selectedServicio = null, selectedFecha = null, selectedSlot = null;
+  let currentRStep = 1;
+  let calYear, calMonth;
+
+  // ── CARGAR DATOS ──
+  async function cargarBarberia() {
+    // Obtener slug de la URL
+    const path = window.__APP_SLUG; void (window.location.pathname.replace(/^\//,, '').split('/')[0];
+    const slug = path || null;
+
+    // Si no hay slug, redirigir al registro
+    if (!slug || slug === 'barberia.html') {
+      window.location.href = '/';
+      return;
+    }
+
+    try {
+      // Negocio
+      const { data: biz, error } = await sb.from('businesses').select('*').eq('slug', slug).single();
+      if (error || !biz) { mostrarNotFound(); return; }
+      bizData = biz;
+
+      // Staff
+      const { data: staff } = await sb.from('staff').select('*').eq('business_id', biz.id).eq('is_active', true).single();
+      staffData = staff;
+
+      // Servicios
+      const { data: svcs } = await sb.from('services').select('*').eq('business_id', biz.id).eq('is_active', true).order('display_order');
+      serviciosData = svcs || [];
+
+      // Horarios
+      const { data: horas } = await sb.from('business_hours').select('*').eq('business_id', biz.id);
+      horariosData = horas || [];
+
+      renderPagina();
+    } catch(e) {
+      console.error(e);
+      mostrarNotFound();
+    }
+  }
+
+  function mostrarNotFound() {
+    document.getElementById('pageLoading').style.display = 'none';
+    document.getElementById('notFound').style.display = 'flex';
+  }
+
+  function renderPagina() {
+    document.title = bizData.name + ' — Reserva tu cita';
+
+    // Hero
+    if (bizData.logo_url) {
+      const heroLogoEl = document.getElementById('heroLogo');
+      heroLogoEl.innerHTML = `<img src="${bizData.logo_url}" alt="${bizData.name}">`;
+      const heroBg = document.getElementById('heroBgImg');
+      heroBg.src = bizData.logo_url;
+      heroBg.style.display = 'block';
+    }
+    document.getElementById('heroName').textContent = bizData.name;
+    document.getElementById('heroSlogan').textContent = bizData.slogan || '';
+
+    // Maps
+    if (bizData.maps_url) {
+      const mapsBtn = document.getElementById('mapsBtn');
+      mapsBtn.href = bizData.maps_url;
+      mapsBtn.style.display = 'inline-flex';
+    }
+
+    // Barbero
+    if (staffData) {
+      const avatarEl = document.getElementById('barberAvatar');
+      if (staffData.photo_url) {
+        avatarEl.innerHTML = `<img src="${staffData.photo_url}" alt="${staffData.full_name}">`;
+      } else {
+        const initials = staffData.full_name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        avatarEl.textContent = initials;
+      }
+      document.getElementById('barberName').textContent = staffData.full_name;
+      document.getElementById('barberContact').textContent = staffData.whatsapp_number ? '📲 ' + staffData.whatsapp_number : 'Barbero';
+    }
+
+    // Descripción
+    if (bizData.description) {
+      document.getElementById('descSection').style.display = 'block';
+      document.getElementById('bizDesc').textContent = bizData.description;
+    }
+
+    // Servicios
+    const list = document.getElementById('servicesList');
+    list.innerHTML = serviciosData.map(s => `
+      <div class="service-card" id="svc_${s.id}" onclick="seleccionarServicio('${s.id}')">
+        <div class="service-img" style="${s.image_url ? '' : 'width:70px'}">
+          ${s.image_url ? `<img src="${s.image_url}" alt="${s.name}">` : '✂️'}
+        </div>
+        <div class="service-body">
+          <div class="service-name">${s.name}</div>
+          <div class="service-meta">
+            <span>⏱ ${s.duration_minutes} min</span>
+          </div>
+          ${s.price ? `<div class="service-price">$${Number(s.price).toLocaleString('es-CO')}</div>` : ''}
+        </div>
+        <div class="service-check" id="check_${s.id}"></div>
+      </div>`).join('');
+
+    document.getElementById('pageLoading').style.display = 'none';
+    document.getElementById('mainPage').style.display = 'block';
+  }
+
+  // ── SELECCIONAR SERVICIO ──
+  function seleccionarServicio(id) {
+    serviciosData.forEach(s => {
+      document.getElementById('svc_' + s.id).classList.remove('selected');
+      document.getElementById('check_' + s.id).textContent = '';
+    });
+    selectedServicio = serviciosData.find(s => s.id === id);
+    document.getElementById('svc_' + id).classList.add('selected');
+    document.getElementById('check_' + id).textContent = '✓';
+
+    // Actualizar sticky CTA
+    document.getElementById('ctaServicio').textContent = selectedServicio.name;
+    const precio = selectedServicio.price ? '$' + Number(selectedServicio.price).toLocaleString('es-CO') : selectedServicio.duration_minutes + ' min';
+    document.getElementById('ctaPrecio').textContent = precio + ' · ' + selectedServicio.duration_minutes + ' min';
+  }
+
+  // ── RESERVA MODAL ──
+  function abrirReserva() {
+    if (!selectedServicio && serviciosData.length > 0) {
+      seleccionarServicio(serviciosData[0].id);
+    }
+    // Inicializar calendario
+    const hoy = new Date();
+    calYear = hoy.getFullYear();
+    calMonth = hoy.getMonth();
+    renderCalendario();
+
+    // Resumen servicio
+    if (selectedServicio) {
+      document.getElementById('resumenServicio').style.display = 'flex';
+      document.getElementById('resumenNombre').textContent = selectedServicio.name;
+      document.getElementById('r1Subtitle').textContent = selectedServicio.duration_minutes + ' min · ' + (selectedServicio.price ? '$' + Number(selectedServicio.price).toLocaleString('es-CO') : '');
+    }
+
+    irR(1);
+    document.getElementById('modalReserva').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function cerrarReserva() {
+    document.getElementById('modalReserva').classList.remove('show');
+    document.body.style.overflow = '';
+    selectedFecha = null;
+    selectedSlot = null;
+    irR(1);
+  }
+
+  function irR(n) {
+    document.getElementById('r' + currentRStep).classList.remove('active');
+    document.getElementById('r' + n).classList.add('active');
+    currentRStep = n;
+    // Actualizar barra de progreso
+    document.querySelectorAll('.reserva-step').forEach((el, i) => {
+      el.classList.toggle('active', i < n);
+    });
+    if (n === 2) renderSlots();
+    if (n === 4) renderConfirmacion();
+  }
+
+  // ── CALENDARIO ──
+  const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  function cambiarMes(dir) {
+    calMonth += dir;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendario();
+  }
+
+  function renderCalendario() {
+    document.getElementById('calTitle').textContent = MESES[calMonth] + ' ' + calYear;
+    const grid = document.getElementById('calGrid');
+    const hoy = new Date();
+    hoy.setHours(0,0,0,0);
+    const primerDia = new Date(calYear, calMonth, 1).getDay();
+    const diasEnMes = new Date(calYear, calMonth+1, 0).getDate();
+
+    let html = DIAS.map(d => `<div class="cal-day-name">${d}</div>`).join('');
+    for (let i = 0; i < primerDia; i++) html += `<div class="cal-day empty"></div>`;
+
+    for (let d = 1; d <= diasEnMes; d++) {
+      const fecha = new Date(calYear, calMonth, d);
+      const fechaStr = fecha.toISOString().split('T')[0];
+      const dow = fecha.getDay();
+      const esPasado = fecha < hoy;
+      const horario = horariosData.find(h => h.day_of_week === dow);
+      const esCerrado = !horario || !horario.is_open;
+      const disabled = esPasado || esCerrado;
+      const isSelected = selectedFecha === fechaStr;
+      const isHoy = fecha.getTime() === hoy.getTime();
+
+      html += `<div class="cal-day${disabled?' disabled':''}${isSelected?' selected':''}${isHoy&&!disabled?' today':''}"
+        ${!disabled ? `onclick="seleccionarFecha('${fechaStr}')"` : ''}>
+        ${d}
+      </div>`;
+    }
+    grid.innerHTML = html;
+  }
+
+  function seleccionarFecha(fecha) {
+    selectedFecha = fecha;
+    selectedSlot = null;
+    renderCalendario();
+  }
+
+  // ── SLOTS HORARIOS ──
+  async function renderSlots() {
+    if (!selectedFecha) { document.getElementById('slotsGrid').innerHTML = '<p style="color:var(--text-dim);font-size:13px">Selecciona una fecha primero</p>'; return; }
+
+    const dow = new Date(selectedFecha + 'T12:00:00').getDay();
+    const horario = horariosData.find(h => h.day_of_week === dow);
+    if (!horario || !horario.is_open) { document.getElementById('slotsGrid').innerHTML = '<p style="color:var(--text-dim);font-size:13px">Este día no hay atención</p>'; return; }
+
+    // Generar slots de 15 en 15
+    const slots = [];
+    const [oh, om] = horario.open_time.split(':').map(Number);
+    const [ch, cm] = horario.close_time.split(':').map(Number);
+    let curr = oh * 60 + om;
+    const end = ch * 60 + cm;
+    const duracion = selectedServicio ? selectedServicio.duration_minutes : 45;
+
+    while (curr + duracion <= end) {
+      const h = String(Math.floor(curr/60)).padStart(2,'0');
+      const m = String(curr%60).padStart(2,'0');
+      slots.push(h + ':' + m);
+      curr += 15;
+    }
+
+    // Citas ya tomadas
+    const { data: citas } = await sb.from('appointments')
+      .select('start_time')
+      .eq('business_id', bizData.id)
+      .eq('appointment_date', selectedFecha)
+      .eq('status', 'confirmed');
+
+    const tomados = new Set((citas||[]).map(c => c.start_time.slice(0,5)));
+
+    document.getElementById('slotsGrid').innerHTML = slots.map(s => `
+      <div class="slot${tomados.has(s)?' taken':''}${selectedSlot===s?' selected':''}"
+        ${!tomados.has(s) ? `onclick="seleccionarSlot('${s}')"` : ''}>
+        ${s}
+      </div>`).join('');
+
+    document.getElementById('r2Subtitle').textContent = selectedFecha + ' — Elige tu hora';
+  }
+
+  function seleccionarSlot(slot) {
+    selectedSlot = slot;
+    renderSlots();
+  }
+
+  // ── CONFIRMACIÓN ──
+  function renderConfirmacion() {
+    const nombre = document.getElementById('clientName').value;
+    const telefono = document.getElementById('clientPhone').value;
+    const fecha = selectedFecha;
+    const hora = selectedSlot;
+    const servicio = selectedServicio;
+
+    document.getElementById('confirmBox').innerHTML = `
+      <div class="confirm-row"><span>Servicio</span><strong>${servicio?.name||'-'}</strong></div>
+      <div class="confirm-row"><span>Duración</span><strong>${servicio?.duration_minutes||'-'} min</strong></div>
+      ${servicio?.price ? `<div class="confirm-row"><span>Precio</span><strong>$${Number(servicio.price).toLocaleString('es-CO')}</strong></div>` : ''}
+      <div class="confirm-row"><span>Fecha</span><strong>${fecha||'-'}</strong></div>
+      <div class="confirm-row"><span>Hora</span><strong>${hora||'-'}</strong></div>
+      <div class="confirm-row"><span>Nombre</span><strong>${nombre||'-'}</strong></div>
+      <div class="confirm-row"><span>WhatsApp</span><strong>${telefono||'-'}</strong></div>
+      <div class="confirm-row"><span>Barbero</span><strong>${staffData?.full_name||'-'}</strong></div>
+    `;
+  }
+
+  // ── CONFIRMAR CITA ──
+  async function confirmarCita() {
+    const nombre = document.getElementById('clientName').value.trim();
+    const telefono = document.getElementById('clientPhone').value.trim();
+    const email = document.getElementById('clientEmail').value.trim();
+
+    if (!nombre) { showToast('Escribe tu nombre', 'error'); return; }
+    if (!telefono) { showToast('Escribe tu WhatsApp', 'error'); return; }
+    if (!selectedFecha) { showToast('Selecciona una fecha', 'error'); return; }
+    if (!selectedSlot) { showToast('Selecciona un horario', 'error'); return; }
+
+    document.getElementById('btnConfirmar').disabled = true;
+    document.getElementById('btnConfirmar').textContent = 'Guardando...';
+
+    try {
+      const duracion = selectedServicio.duration_minutes;
+      const [sh, sm] = selectedSlot.split(':').map(Number);
+      const endMins = sh*60 + sm + duracion;
+      const endTime = String(Math.floor(endMins/60)).padStart(2,'0') + ':' + String(endMins%60).padStart(2,'0') + ':00';
+
+      const { error } = await sb.from('appointments').insert({
+        business_id: bizData.id,
+        staff_id: staffData.id,
+        service_id: selectedServicio.id,
+        client_name: nombre,
+        client_phone: telefono,
+        client_email: email || null,
+        appointment_date: selectedFecha,
+        start_time: selectedSlot + ':00',
+        end_time: endTime,
+        status: 'confirmed'
+      });
+
+      if (error) throw error;
+
+      // Mensaje WhatsApp para el barbero
+      const msgBarbero = encodeURIComponent(
+        `✂️ Nueva cita confirmada:\n` +
+        `👤 Cliente: ${nombre}\n` +
+        `📱 WhatsApp: ${telefono}\n` +
+        `💈 Servicio: ${selectedServicio.name}\n` +
+        `📅 Fecha: ${selectedFecha}\n` +
+        `⏰ Hora: ${selectedSlot}\n` +
+        `⏱ Duración: ${duracion} min`
+      );
+      const waNum = staffData?.whatsapp_number || bizData.whatsapp_number || '573337458042';
+      document.getElementById('waConfirm').href = `https://wa.me/${waNum}?text=${msgBarbero}`;
+      document.getElementById('successMsg').textContent = `Tu cita el ${selectedFecha} a las ${selectedSlot} con ${staffData?.full_name||bizData.name} está confirmada.`;
+
+      irR(5);
+    } catch(err) {
+      console.error(err);
+      showToast('Error al reservar. Intenta de nuevo.', 'error');
+      document.getElementById('btnConfirmar').disabled = false;
+      document.getElementById('btnConfirmar').textContent = 'Reservar cita';
+    }
+  }
+
+  // Validar antes de avanzar en reserva
+  const btnR1Orig = document.getElementById('btnR1');
+  document.getElementById('btnR1').onclick = () => {
+    if (!selectedFecha) { showToast('Selecciona una fecha', 'error'); return; }
+    irR(2);
+  };
+  document.getElementById('btnR2').onclick = () => {
+    if (!selectedSlot) { showToast('Selecciona un horario', 'error'); return; }
+    const nombre = document.getElementById('clientName').value.trim();
+    irR(3);
+  };
+
+  function showToast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Cerrar modal tocando fondo
+  document.getElementById('modalReserva').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalReserva')) cerrarReserva();
+  });
+
+  // Iniciar
+  cargarBarberia();
+})();
+</script>
+</body>
+</html>
